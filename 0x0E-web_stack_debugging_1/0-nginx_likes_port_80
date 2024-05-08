@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Install Nginx if not already installed
+if ! command -v nginx &> /dev/null; then
+    echo "Installing Nginx..."
+    sudo apt update
+    sudo apt install nginx -y
+fi
+
+# Check if Nginx is running
+if sudo systemctl is-active --quiet nginx; then
+    echo "Nginx is already running."
+else
+    echo "Starting Nginx..."
+    sudo systemctl start nginx
+fi
+
+# Check if Nginx is listening on port 80 for all active IPv4 IPs
+if sudo netstat -tuln | grep -qE '0.0.0.0:80'; then
+    echo "Nginx is already listening on port 80 for all active IPv4 IPs."
+else
+    echo "Configuring Nginx to listen on port 80 for all active IPv4 IPs..."
+
+    # Modify Nginx configuration to listen on port 80 for all IPs
+    sudo sed -i 's/listen\s*80;/listen 80 default_server;/g' /etc/nginx/sites-available/default
+
+    # Restart Nginx to apply changes
+    sudo systemctl restart nginx
+
+    echo "Nginx is now listening on port 80 for all active IPv4 IPs."
+fi
+
